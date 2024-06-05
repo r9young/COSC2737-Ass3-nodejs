@@ -28,7 +28,8 @@ app.post('/addUser',async (req, res) => {
     let newDocument = req.body;
     newDocument.date = new Date();
     let result = await collection.insertOne(newDocument);
-    console.log("rreq"+req.body);
+    // console.log("rreq"+req.body);
+    console.log("Request body: ", req.body);
     res.send(result).status(204);
 });
 
