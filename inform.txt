@@ -1,0 +1,9 @@
+LjBmaJwFiQxYZ0Mq
+r9young777
+project_name: mern-deployment
+
+
+ubuntu@ip-172-31-47-17:~$ docker ps
+CONTAINER ID   IMAGE                    COMMAND                  CREATED       STATUS       PORTS                                       NAMES
+e019a8e086eb   73511678fded             "docker-entrypoint.s…"   2 hours ago   Up 2 hours   0.0.0.0:4000->4000/tcp, :::4000->4000/tcp   nodejs-app-container-debug
+2aa9260a8ea7   r9young777/reactjs-app   "nginx -g 'daemon of…"   4 hours ago   Up 4 hours   0.0.0.0:3000->80/tcp, :::3000->80/tcp       reactjs-app-containe
