@@ -33,12 +33,15 @@ app.post('/addUser',async (req, res) => {
     res.send(result).status(204);
 });
 
-app.get('/getUsers', async(req, res) => {
-    let collection = await db.collection("users");
-    let results = await collection.find({})
-      
-      .toArray();
-    res.send(results).status(200);
+app.get('/getUsers', async (req, res) => {
+    try {
+        let collection = await db.collection("users");
+        let results = await collection.find({}).toArray();
+        res.status(200).send(results);
+    } catch (e) {
+        console.error(e);
+        res.status(500).send('Error retrieving users');
+    }
 });
 
 app.listen(port, function () {
