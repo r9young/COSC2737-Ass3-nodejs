@@ -25,6 +25,6 @@ jobs:
       - name: Pull image from docker hub
         run: docker pull r9young777/nodejs-app:latest 
       - name: Delete old container
-        run: docker rm -f nodejs-app-container  
+        run: docker rm -f nodejs-app-container || true
       - name: Run Docker Container
         run: docker run -d -p 4000:4000 --name nodejs-app-container -e MONGO_PASSWORD='${{ secrets.MONGO_PASSWORD }}' r9young777/nodejs-app
