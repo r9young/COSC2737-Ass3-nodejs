@@ -23,18 +23,13 @@ app.get('/', (req, res) => {
     res.send('Hello World, from express');
 })
 
-app.post('/addUser', async (req, res) => {
-    try {
-        let collection = await db.collection("users");
-        let newDocument = req.body;
-        newDocument.date = new Date();
-        let result = await collection.insertOne(newDocument);
-        console.log("Received data:", req.body);
-        res.status(201).send(result); // Use 201 for Created
-    } catch (error) {
-        console.error("Error adding user:", error);
-        res.status(500).send("Error adding user");
-    }
+app.post('/addUser',async (req, res) => {
+    let collection = await db.collection("users");
+    let newDocument = req.body;
+    newDocument.date = new Date();
+    let result = await collection.insertOne(newDocument);
+    console.log("rreq"+req.body);
+    res.send(result).status(204);
 });
 
 app.get('/getUsers', async(req, res) => {
