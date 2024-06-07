@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
     res.send('Hello World, from express');
 })
 
-app.post('/addUser',async (req, res) => {
+app.post('addUser',async (req, res) => {
     let collection = await db.collection("users");
     let newDocument = req.body;
     newDocument.date = new Date();
@@ -32,7 +32,7 @@ app.post('/addUser',async (req, res) => {
     res.send(result).status(204);
 });
 
-app.get('/getUser', async(req, res) => {
+app.get('getUser', async(req, res) => {
     let collection = await db.collection("users");
     let results = await collection.find({})
       
