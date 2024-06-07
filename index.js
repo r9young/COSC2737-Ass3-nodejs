@@ -68,8 +68,8 @@ app.get('/', (req, res) => {
     res.json({
         message: 'Welcome to the User Management API',
         endpoints: {
-            getUsers: '/getusers',
-            addUser: '/adduser',
+            getUsers: 'getusers',
+            addUser: 'adduser',
         }
     });
 });
