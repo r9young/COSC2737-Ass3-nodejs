@@ -42,6 +42,10 @@ app.get('/getUser', async (req, res) => { // Added leading slash
   }
 });
 
+app.listen(port, () => {
+  console.log("Server is listening at port:" + port);
+});
+
 
 // Add the /api/login endpoint
 app.post('/api/login', async (req, res) => {
@@ -61,10 +65,3 @@ app.post('/api/login', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
-
-
-app.listen(port, () => {
-  console.log("Server is listening at port:" + port);
-});
-
-
