@@ -1,15 +1,12 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import cors from 'cors'; // Import the cors middleware
+import cors from 'cors';
 import db from "./mongoC.js"; // Import the database connection
 
-const port = 4000;
 const app = express();
+const port = 4000;
 
-// Use cors middleware to enable CORS with various options
 app.use(cors());
-
-// Middleware to parse JSON and URL encoded data
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
@@ -17,7 +14,7 @@ app.get('/', (req, res) => {
   res.send('Hello World, from express');
 });
 
-app.post('/addUser', async (req, res) => { // Added leading slash
+app.post('/addUser', async (req, res) => {
   try {
     let collection = await db.collection("users");
     let newDocument = req.body;
@@ -31,7 +28,7 @@ app.post('/addUser', async (req, res) => { // Added leading slash
   }
 });
 
-app.get('/getUser', async (req, res) => { // Added leading slash
+app.get('/getUser', async (req, res) => {
   try {
     let collection = await db.collection("users");
     let results = await collection.find({}).toArray();
@@ -42,8 +39,6 @@ app.get('/getUser', async (req, res) => { // Added leading slash
   }
 });
 
-
-// Add the /api/login endpoint
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -62,9 +57,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-
-app.listen(port, () => {
-  console.log("Server is listening at port:" + port);
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server is listening at port: ${port}`);
 });
-
-
