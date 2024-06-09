@@ -102,6 +102,6 @@ app.post('/enable-mfa', async (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Server is listening at http://localhost:${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Server is listening at http://localhost:${port}`);
+// });
