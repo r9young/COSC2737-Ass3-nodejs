@@ -2,8 +2,8 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import connectDB from './mongoC.js';
-import speakeasy from 'speakeasy';
-import qrcode from 'qrcode';
+// import speakeasy from 'speakeasy';
+// import qrcode from 'qrcode';
 import dotenv from 'dotenv';
 
 dotenv.config(); // Load environment variables from .env file
@@ -75,24 +75,24 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-app.post('/enable-mfa', async (req, res) => {
-  const { userId } = req.body;
+// app.post('/enable-mfa', async (req, res) => {
+//   const { userId } = req.body;
 
-  const secret = speakeasy.generateSecret({ length: 20 });
+//   const secret = speakeasy.generateSecret({ length: 20 });
 
-  await db.collection('users').updateOne({ _id: userId }, { $set: { mfaSecret: secret.base32 } });
+//   await db.collection('users').updateOne({ _id: userId }, { $set: { mfaSecret: secret.base32 } });
 
-  const qrCodeUrl = speakeasy.otpauthURL({
-    secret: secret.ascii,
-    label: 'YourAppName',
-    issuer: 'YourAppName',
-    encoding: 'base32'
-  });
+//   const qrCodeUrl = speakeasy.otpauthURL({
+//     secret: secret.ascii,
+//     label: 'YourAppName',
+//     issuer: 'YourAppName',
+//     encoding: 'base32'
+//   });
 
-  qrcode.toDataURL(qrCodeUrl, (err, dataUrl) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to generate QR code' });
-    }
-    res.json({ qrCodeUrl: dataUrl });
-  });
-});
+//   qrcode.toDataURL(qrCodeUrl, (err, dataUrl) => {
+//     if (err) {
+//       return res.status(500).json({ error: 'Failed to generate QR code' });
+//     }
+//     res.json({ qrCodeUrl: dataUrl });
+//   });
+// });
