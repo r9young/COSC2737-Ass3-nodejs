@@ -7,11 +7,10 @@ import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
 
 const port = 4000;
-
+const app = express();
 
 // Use cors middleware to enable CORS with various options
 app.use(cors());
-app.use(express.json());
 
 // Middleware to parse JSON and URL encoded data
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -51,8 +50,6 @@ app.listen(port, () => {
 });
 
 
-const app = express();
-
 // Add the /api/login endpoint
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
@@ -72,20 +69,19 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-
-
 // Route to enable MFA
+
 app.post('/enable-mfa', async (req, res) => {
   const { userId } = req.body;
 
   try {
-    const objectId = new ObjectId(userId);
+    const objectId = new ObjectId(userId); // Convert userId to ObjectId
     const secret = speakeasy.generateSecret({ length: 20 });
 
     await db.collection('users').updateOne({ _id: objectId }, { $set: { mfaSecret: secret.base32 } });
 
     const otpAuthUrl = speakeasy.otpauthURL({
-      secret: secret.base32,
+      secret: secret.base32, // Ensure consistency in encoding
       label: `YourAppName:${userId}`,
       issuer: 'YourAppName',
       encoding: 'base32'
@@ -105,5 +101,5 @@ app.post('/enable-mfa', async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+  console.log("Server is listening at port:" + port);
 });
