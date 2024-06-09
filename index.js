@@ -4,7 +4,7 @@ import cors from 'cors';
 import db from "./mongoC.js";
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
-// import { ObjectId } from 'mongodb';
+import { ObjectId } from 'mongodb';
 
 const port = 4000;
 const app = express();
@@ -102,6 +102,6 @@ app.post('/enable-mfa', async (req, res) => {
   });
 });
 
-app.listen(port, () => {
-  console.log(`Server is listening at http://localhost:${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Server is listening at http://localhost:${port}`);
+// });
