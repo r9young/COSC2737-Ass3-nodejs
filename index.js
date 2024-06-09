@@ -1,9 +1,10 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import cors from 'cors'; // Import the cors middleware
-import db from "./mongoC.js"; // Import the database connection
+import cors from 'cors';
+import db from "./mongoC.js";
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
+import { ObjectId } from 'mongodb';
 
 
 const port = 4000;
@@ -69,24 +70,38 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
+
 app.post('/enable-mfa', async (req, res) => {
   const { userId } = req.body;
 
+  // Convert userId to ObjectId
+  const objectId = new ObjectId(userId);
+
+  // Generate a secret key
   const secret = speakeasy.generateSecret({ length: 20 });
 
-  await db.collection('users').updateOne({ _id: userId }, { $set: { mfaSecret: secret.base32 } });
+  // Store the secret key in the database against the user
+  await db.collection('users').updateOne({ _id: objectId }, { $set: { mfaSecret: secret.base32 } });
 
-  const qrCodeUrl = speakeasy.otpauthURL({
-    secret: secret.ascii,
-    label: 'YourAppName',
+  // Generate a QR code for Google Authenticator
+  const otpAuthUrl = speakeasy.otpauthURL({
+    secret: secret.base32,
+    label: `YourAppName:${userId}`,
     issuer: 'YourAppName',
     encoding: 'base32'
   });
 
-  qrcode.toDataURL(qrCodeUrl, (err, dataUrl) => {
+  // Log the generated otpauth URL
+  console.log('Generated otpauth URL:', otpAuthUrl);
+
+  qrcode.toDataURL(otpAuthUrl, (err, dataUrl) => {
     if (err) {
       return res.status(500).json({ error: 'Failed to generate QR code' });
     }
     res.json({ qrCodeUrl: dataUrl });
   });
+});
+
+app.listen(port, () => {
+  console.log(`Server is listening at http://localhost:${port}`);
 });
