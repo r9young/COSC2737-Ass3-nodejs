@@ -7,10 +7,11 @@ import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
 
 const port = 4000;
-const app = express();
+
 
 // Use cors middleware to enable CORS with various options
 app.use(cors());
+app.use(express.json());
 
 // Middleware to parse JSON and URL encoded data
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -50,6 +51,8 @@ app.listen(port, () => {
 });
 
 
+const app = express();
+
 // Add the /api/login endpoint
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
@@ -68,6 +71,8 @@ app.post('/api/login', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
+
+
 
 // Route to enable MFA
 app.post('/enable-mfa', async (req, res) => {
@@ -95,6 +100,10 @@ app.post('/enable-mfa', async (req, res) => {
     });
   } catch (error) {
     console.error('Error in /enable-mfa endpoint:', error);
-    res.status(500).send('An error occurred');
+    res.status(500).json({ error: 'An error occurred' });
   }
+});
+
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
 });
