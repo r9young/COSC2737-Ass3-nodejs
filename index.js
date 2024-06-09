@@ -53,7 +53,7 @@ app.post('/api/login', async (req, res) => {
     let user = await collection.findOne({ username });
 
     if (user && user.password === password) {
-      res.status(200).send({ success: true });
+      res.status(200).send({ success: true, userId: user._id.toString() }); // Ensure userId is sent
     } else {
       res.status(401).send({ success: false });
     }
@@ -62,6 +62,8 @@ app.post('/api/login', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
+
+
 
 // Route to enable MFA
 app.post('/enable-mfa', async (req, res) => {
