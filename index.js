@@ -69,39 +69,28 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-
-
+// Route to enable MFA
 app.post('/enable-mfa', async (req, res) => {
-  const { userId } = req.body;
-
-  // Convert userId to ObjectId
-  const objectId = new ObjectId(userId);
+  const { userId } = req.body; // Assuming userId is passed in the request body
 
   // Generate a secret key
   const secret = speakeasy.generateSecret({ length: 20 });
 
   // Store the secret key in the database against the user
-  await db.collection('users').updateOne({ _id: objectId }, { $set: { mfaSecret: secret.base32 } });
+  await db.collection('users').updateOne({ _id: userId }, { $set: { mfaSecret: secret.base32 } });
 
   // Generate a QR code for Google Authenticator
-  const otpAuthUrl = speakeasy.otpauthURL({
-    secret: secret.base32,
-    label: `YourAppName:${userId}`,
+  const qrCodeUrl = speakeasy.otpauthURL({
+    secret: secret.ascii,
+    label: 'YourAppName',
     issuer: 'YourAppName',
     encoding: 'base32'
   });
 
-  // Log the generated otpauth URL
-  console.log('Generated otpauth URL:', otpAuthUrl);
-
-  qrcode.toDataURL(otpAuthUrl, (err, dataUrl) => {
+  qrcode.toDataURL(qrCodeUrl, (err, dataUrl) => {
     if (err) {
       return res.status(500).json({ error: 'Failed to generate QR code' });
     }
     res.json({ qrCodeUrl: dataUrl });
   });
-});
-
-app.listen(port, () => {
-  console.log(`Server is listening at http://localhost:${port}`);
 });
