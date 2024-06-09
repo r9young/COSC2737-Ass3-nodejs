@@ -1,0 +1,1 @@
+curl -X POST http://13.54.65.192:4000/enable-mfa -H "Content-Type: application/json" -d '{"userId": "r9young@hotmail.com"}'
