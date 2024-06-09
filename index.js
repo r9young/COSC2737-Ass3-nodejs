@@ -71,26 +71,30 @@ app.post('/api/login', async (req, res) => {
 
 // Route to enable MFA
 app.post('/enable-mfa', async (req, res) => {
-  const { userId } = req.body; // Assuming userId is passed in the request body
+  const { userId } = req.body;
 
-  // Generate a secret key
-  const secret = speakeasy.generateSecret({ length: 20 });
+  try {
+    const objectId = new ObjectId(userId);
+    const secret = speakeasy.generateSecret({ length: 20 });
 
-  // Store the secret key in the database against the user
-  await db.collection('users').updateOne({ _id: userId }, { $set: { mfaSecret: secret.base32 } });
+    await db.collection('users').updateOne({ _id: objectId }, { $set: { mfaSecret: secret.base32 } });
 
-  // Generate a QR code for Google Authenticator
-  const qrCodeUrl = speakeasy.otpauthURL({
-    secret: secret.ascii,
-    label: 'YourAppName',
-    issuer: 'YourAppName',
-    encoding: 'base32'
-  });
+    const otpAuthUrl = speakeasy.otpauthURL({
+      secret: secret.base32,
+      label: `YourAppName:${userId}`,
+      issuer: 'YourAppName',
+      encoding: 'base32'
+    });
 
-  qrcode.toDataURL(qrCodeUrl, (err, dataUrl) => {
-    if (err) {
-      return res.status(500).json({ error: 'Failed to generate QR code' });
-    }
-    res.json({ qrCodeUrl: dataUrl });
-  });
+    qrcode.toDataURL(otpAuthUrl, (err, dataUrl) => {
+      if (err) {
+        console.error('Error generating QR code:', err);
+        return res.status(500).json({ error: 'Failed to generate QR code' });
+      }
+      res.json({ qrCodeUrl: dataUrl });
+    });
+  } catch (error) {
+    console.error('Error in /enable-mfa endpoint:', error);
+    res.status(500).send('An error occurred');
+  }
 });
