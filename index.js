@@ -2,6 +2,9 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors'; // Import the cors middleware
 import db from "./mongoC.js"; // Import the database connection
+import speakeasy from 'speakeasy';
+import qrcode from 'qrcode';
+
 
 const port = 4000;
 const app = express();
