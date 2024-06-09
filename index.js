@@ -53,7 +53,7 @@ app.post('/api/login', async (req, res) => {
     let user = await collection.findOne({ username });
 
     if (user && user.password === password) {
-      res.status(200).send({ success: true, userId: user._id.toString() }); // Ensure userId is sent
+      res.status(200).send({ success: true, userId: user._id.toString() }); // done Ensure userId is sent
     } else {
       res.status(401).send({ success: false });
     }
@@ -84,7 +84,7 @@ app.post('/enable-mfa', async (req, res) => {
 
     // Generate a QR code for Google Authenticator
     const otpAuthUrl = speakeasy.otpauthURL({
-      secret: secret.base32, // Ensure consistency in encoding
+      secret: secret.base32, // Ensure consistency in encoding, done
       label: `YourAppName:${userId}`,
       issuer: 'YourAppName',
       encoding: 'base32'
