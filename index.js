@@ -145,6 +145,29 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
+
+// Assuming you have a User model for your MongoDB collection
+const User = require('./models/User');
+
+// Endpoint to get user details by username
+app.get('/getUserByUsername/:username', async (req, res) => {
+  try {
+    const user = await User.findOne({ username: req.params.username });
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).send('User not found');
+    }
+  } catch (error) {
+    console.error('Error fetching user by username:', error);
+    res.status(500).send('Server error');
+  }
+});
+
+
+
+
+
 app.use('/api', conversationRoutes);
 
 io.on('connection', (socket) => {
