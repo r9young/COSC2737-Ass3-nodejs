@@ -56,8 +56,9 @@ app.post('/api/login', async (req, res) => {
       const response = {
         success: true,
         userId: user._id.toString(),
-        mfaSecret: user.mfaEnabled ? user.mfaSecret : null
+        mfaSecret: user.mfaSecret || null // Include mfaSecret if it exists
       };
+      console.log('User MFA status:', user.mfaSecret ? 'Enabled' : 'Disabled', 'MFA Secret:', user.mfaSecret); // Log MFA status
       res.status(200).send(response);
     } else {
       res.status(401).send({ success: false });
@@ -67,6 +68,7 @@ app.post('/api/login', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
+
 
 
 
