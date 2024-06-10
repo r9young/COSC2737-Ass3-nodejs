@@ -11,13 +11,20 @@ import conversationRoutes from './conversations.js';
 
 const port = 4000;
 const app = express();
-const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" }});
+const httpServer = createServer(app);
+const io = new Server(httpServer, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+});
 
+// Use cors middleware to enable CORS with various options
 app.use(cors());
+
+// Middleware to parse JSON and URL encoded data
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
-
 app.get('/', (req, res) => {
   res.send('Hello World, from express');
 });
@@ -146,34 +153,31 @@ app.post('/enable-mfa', async (req, res) => {
 
 app.use('/api', conversationRoutes);
 
-io.on('connection', (socket) => {
-  console.log('a user connected:', socket.id);
+// Use conversation routes
+app.use('/api', conversationRoutes);
 
-  socket.on('joinRoom', (roomId) => {
-    socket.join(roomId);
-    console.log(`User ${socket.id} joined room ${roomId}`);
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  socket.on('joinRoom', (conversationId) => {
+    socket.join(conversationId);
+    console.log('User joined room:', conversationId);
   });
 
-  socket.on('sendMessage', async (data) => {
-    const { conversationId, senderId, text } = data;
-
-    try {
-      const collection = await db.collection('conversations');
-      await collection.updateOne(
-        { _id: new ObjectId(conversationId) },
-        { $push: { messages: { _id: new ObjectId(), senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
-      );
-      io.to(conversationId).emit('newMessage', { senderId, text, timestamp: new Date() });
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
+  socket.on('sendMessage', ({ conversationId, senderId, text }) => {
+    const message = { senderId, text, timestamp: new Date() };
+    db.collection('conversations').updateOne(
+      { _id: new ObjectId(conversationId) },
+      { $push: { messages: message }, $set: { lastUpdated: new Date() } }
+    );
+    io.to(conversationId).emit('newMessage', message);
   });
 
   socket.on('disconnect', () => {
-    console.log('user disconnected:', socket.id);
+    console.log('User disconnected:', socket.id);
   });
 });
 
-server.listen(port, () => {
+httpServer.listen(port, () => {
   console.log('Server is listening at port:' + port);
 });
