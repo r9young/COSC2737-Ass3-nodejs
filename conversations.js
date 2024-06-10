@@ -18,20 +18,20 @@ router.get('/conversations', async (req, res) => {
 });
 
 router.post('/conversations', async (req, res) => {
-  const { participants } = req.body; // An array of user IDs
-  if (participants.includes(null)) {
-    return res.status(400).json({ success: false, message: 'Invalid user IDs' });
-  }
-  console.log('Creating conversation with participants:', participants);
-  try {
-    const collection = await db.collection('conversations');
-    const conversation = await collection.insertOne({ participants, messages: [], lastUpdated: new Date() });
-    res.status(201).json({ success: true, conversationId: conversation.insertedId });
-  } catch (error) {
-    console.error('Error creating conversation:', error);
-    res.status(500).json({ success: false, message: 'Failed to create conversation' });
-  }
-});
+    const { participants } = req.body; // An array of user IDs
+    if (new Set(participants).size !== participants.length) {
+      return res.status(400).json({ success: false, message: 'Participants should be unique' });
+    }
+    console.log('Creating conversation with participants:', participants);
+    try {
+      const collection = await db.collection('conversations');
+      const conversation = await collection.insertOne({ participants, messages: [], lastUpdated: new Date() });
+      res.status(201).json({ success: true, conversationId: conversation.insertedId });
+    } catch (error) {
+      console.error('Error creating conversation:', error);
+      res.status(500).json({ success: false, message: 'Failed to create conversation' });
+    }
+  });
 
 router.post('/conversations/:id/messages', async (req, res) => {
   const { id } = req.params;
