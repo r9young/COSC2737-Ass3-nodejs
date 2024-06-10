@@ -21,6 +21,9 @@ router.post('/conversations', async (req, res) => {
   const { participants } = req.body; // An array of user IDs
   console.log('Creating conversation with participants:', participants);
   try {
+    if (!participants || participants.includes(null)) {
+      throw new Error('Invalid participants');
+    }
     const collection = await db.collection('conversations');
     const conversation = await collection.insertOne({ participants, messages: [], lastUpdated: new Date() });
     res.status(201).json({ success: true, conversationId: conversation.insertedId });
