@@ -70,6 +70,38 @@ app.post('/api/login', async (req, res) => {
 });
 
 
+app.post('/api/verify-otp', async (req, res) => {
+  const { otp, userId } = req.body;
+
+  try {
+    let collection = await db.collection('users');
+    let user = await collection.findOne({ _id: new ObjectId(userId) });
+
+    if (user && user.mfaSecret) {
+      // Assuming you use a library like speakeasy to verify OTP
+      const speakeasy = require('speakeasy');
+      const verified = speakeasy.totp.verify({
+        secret: user.mfaSecret,
+        encoding: 'base32',
+        token: otp
+      });
+
+      if (verified) {
+        res.status(200).send({ success: true });
+      } else {
+        res.status(401).send({ success: false, message: 'Invalid OTP' });
+      }
+    } else {
+      res.status(404).send({ success: false, message: 'User not found or MFA not enabled' });
+    }
+  } catch (error) {
+    console.error('Error verifying OTP:', error);
+    res.status(500).send('An error occurred during OTP verification');
+  }
+});
+
+
+
 
 
 // Route to enable MFA
