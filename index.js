@@ -147,31 +147,34 @@ app.post('/enable-mfa', async (req, res) => {
 
 app.use('/api', conversationRoutes);
 
-// Use conversation routes
-app.use('/api', conversationRoutes);
-
 io.on('connection', (socket) => {
-  console.log('A user connected:', socket.id);
+  console.log('a user connected:', socket.id);
 
-  socket.on('joinRoom', (conversationId) => {
-    socket.join(conversationId);
-    console.log('User joined room:', conversationId);
+  socket.on('joinRoom', (roomId) => {
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined room ${roomId}`);
   });
 
-  socket.on('sendMessage', ({ conversationId, senderId, text }) => {
-    const message = { senderId, text, timestamp: new Date() };
-    db.collection('conversations').updateOne(
-      { _id: new ObjectId(conversationId) },
-      { $push: { messages: message }, $set: { lastUpdated: new Date() } }
-    );
-    io.to(conversationId).emit('newMessage', message);
+  socket.on('sendMessage', async (data) => {
+    const { conversationId, senderId, text } = data;
+
+    try {
+      const collection = await db.collection('conversations');
+      await collection.updateOne(
+        { _id: new ObjectId(conversationId) },
+        { $push: { messages: { _id: new ObjectId(), senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
+      );
+      io.to(conversationId).emit('newMessage', { senderId, text, timestamp: new Date() });
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
   });
 
   socket.on('disconnect', () => {
-    console.log('User disconnected:', socket.id);
+    console.log('user disconnected:', socket.id);
   });
 });
 
-httpServer.listen(port, () => {
+server.listen(port, () => {
   console.log('Server is listening at port:' + port);
 });
