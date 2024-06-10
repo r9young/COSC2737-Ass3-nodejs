@@ -5,7 +5,7 @@ import db from './mongoC.js';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
-import conversationRoutes from './conversations.js';
+
 
 
 
@@ -149,10 +149,6 @@ app.post('/enable-mfa', async (req, res) => {
     res.status(500).json({ error: 'An error occurred' });
   }
 });
-
-
-// Use conversation routes
-app.use('/api', conversationRoutes);
 
 app.listen(port, () => {
   console.log('Server is listening at port:' + port);
