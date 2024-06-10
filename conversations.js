@@ -47,7 +47,7 @@ router.post('/conversations/:id/messages', async (req, res) => {
   }
 });
 
-// New endpoint to fetch conversation messages
+// Endpoint to fetch conversation messages
 router.get('/conversations/:id/messages', async (req, res) => {
   const { id } = req.params;
   console.log(`Fetching messages for conversation ${id}`);
