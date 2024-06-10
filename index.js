@@ -7,7 +7,6 @@ import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
 import conversationRoutes from './conversations.js'; // Import conversation routes
 
-
 const port = 4000;
 const app = express();
 
@@ -66,7 +65,7 @@ app.post('/api/login', async (req, res) => {
       res.status(401).send({ success: false });
     }
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error during login:', error);
     res.status(500).send('An error occurred');
   }
 });
@@ -110,8 +109,6 @@ app.post('/api/verify-otp', async (req, res) => {
   }
 });
 
-
-// Route to enable MFA
 app.post('/enable-mfa', async (req, res) => {
   const { userId } = req.body;
 
@@ -148,7 +145,6 @@ app.post('/enable-mfa', async (req, res) => {
     res.status(500).json({ error: 'An error occurred' });
   }
 });
-
 
 // Use conversation routes
 app.use('/api', conversationRoutes);
