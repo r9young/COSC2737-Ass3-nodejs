@@ -6,6 +6,8 @@ import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
 
+
+
 const port = 4000;
 const app = express();
 
@@ -69,7 +71,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-
 app.post('/api/verify-otp', async (req, res) => {
   const { otp, userId } = req.body;
 
@@ -78,8 +79,7 @@ app.post('/api/verify-otp', async (req, res) => {
     let user = await collection.findOne({ _id: new ObjectId(userId) });
 
     if (user && user.mfaSecret) {
-      // Assuming you use a library like speakeasy to verify OTP
-      const speakeasy = require('speakeasy');
+      console.log('Verifying OTP for user:', userId);
       const verified = speakeasy.totp.verify({
         secret: user.mfaSecret,
         encoding: 'base32',
@@ -89,9 +89,11 @@ app.post('/api/verify-otp', async (req, res) => {
       if (verified) {
         res.status(200).send({ success: true });
       } else {
+        console.log('Invalid OTP for user:', userId);
         res.status(401).send({ success: false, message: 'Invalid OTP' });
       }
     } else {
+      console.log('User not found or MFA not enabled for user:', userId);
       res.status(404).send({ success: false, message: 'User not found or MFA not enabled' });
     }
   } catch (error) {
@@ -99,8 +101,6 @@ app.post('/api/verify-otp', async (req, res) => {
     res.status(500).send('An error occurred during OTP verification');
   }
 });
-
-
 
 
 
