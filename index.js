@@ -11,20 +11,14 @@ import conversationRoutes from './conversations.js';
 
 const port = 4000;
 const app = express();
-const httpServer = createServer(app);
-const io = new Server(httpServer, {
-  cors: {
-    origin: '*',
-    methods: ['GET', 'POST'],
-  },
-});
+const server = http.createServer(app);
+const io = new Server(server, { cors: { origin: "*" }});
 
-// Use cors middleware to enable CORS with various options
+
 app.use(cors());
-
-// Middleware to parse JSON and URL encoded data
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
+
 app.get('/', (req, res) => {
   res.send('Hello World, from express');
 });
@@ -151,6 +145,7 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
+app.use('/api', conversationRoutes);
 
 // Use conversation routes
 app.use('/api', conversationRoutes);
