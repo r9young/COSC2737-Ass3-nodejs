@@ -44,7 +44,7 @@ router.post('/conversations/:id/messages', async (req, res) => {
     const collection = await db.collection('conversations');
     await collection.updateOne(
       { _id: new ObjectId(id) },
-      { $push: { messages: { senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
+      { $push: { messages: { _id: new ObjectId(), senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
     );
     res.status(200).json({ success: true });
   } catch (error) {
