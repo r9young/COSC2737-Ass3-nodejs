@@ -19,11 +19,11 @@ router.get('/conversations', async (req, res) => {
 
 router.post('/conversations', async (req, res) => {
   const { participants } = req.body; // An array of user IDs
+  if (participants.includes(null)) {
+    return res.status(400).json({ success: false, message: 'Invalid user IDs' });
+  }
   console.log('Creating conversation with participants:', participants);
   try {
-    if (!participants || participants.includes(null)) {
-      throw new Error('Invalid participants');
-    }
     const collection = await db.collection('conversations');
     const conversation = await collection.insertOne({ participants, messages: [], lastUpdated: new Date() });
     res.status(201).json({ success: true, conversationId: conversation.insertedId });
@@ -36,15 +36,15 @@ router.post('/conversations', async (req, res) => {
 router.post('/conversations/:id/messages', async (req, res) => {
   const { id } = req.params;
   const { senderId, text } = req.body;
+  if (!ObjectId.isValid(senderId) || !ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: 'Invalid IDs' });
+  }
   console.log(`Adding message to conversation ${id} from sender ${senderId}`);
   try {
-    if (!senderId) {
-      throw new Error('Sender ID is null');
-    }
     const collection = await db.collection('conversations');
     await collection.updateOne(
       { _id: new ObjectId(id) },
-      { $push: { messages: { senderId, text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
+      { $push: { messages: { senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
     );
     res.status(200).json({ success: true });
   } catch (error) {
@@ -53,10 +53,11 @@ router.post('/conversations/:id/messages', async (req, res) => {
   }
 });
 
-// Endpoint to fetch conversation messages
 router.get('/conversations/:id/messages', async (req, res) => {
   const { id } = req.params;
-  console.log(`Fetching messages for conversation ${id}`);
+  if (!ObjectId.isValid(id)) {
+    return res.status(400).json({ success: false, message: 'Invalid conversation ID' });
+  }
   try {
     const collection = await db.collection('conversations');
     const conversation = await collection.findOne({ _id: new ObjectId(id) });
