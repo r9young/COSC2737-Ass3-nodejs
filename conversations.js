@@ -47,4 +47,21 @@ router.post('/conversations/:id/messages', async (req, res) => {
   }
 });
 
+// New endpoint to fetch conversation messages
+router.get('/conversations/:id/messages', async (req, res) => {
+  const { id } = req.params;
+  console.log(`Fetching messages for conversation ${id}`);
+  try {
+    const collection = await db.collection('conversations');
+    const conversation = await collection.findOne({ _id: new ObjectId(id) });
+    if (!conversation) {
+      return res.status(404).json({ success: false, message: 'Conversation not found' });
+    }
+    res.status(200).json({ success: true, messages: conversation.messages });
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch messages' });
+  }
+});
+
 export default router;
