@@ -75,11 +75,18 @@ app.post('/api/verify-otp', async (req, res) => {
   const { otp, userId } = req.body;
 
   try {
+    if (!ObjectId.isValid(userId)) {
+      return res.status(400).json({ error: 'Invalid userId format' });
+    }
+
     let collection = await db.collection('users');
     let user = await collection.findOne({ _id: new ObjectId(userId) });
 
     if (user && user.mfaSecret) {
       console.log('Verifying OTP for user:', userId);
+      console.log('Provided OTP:', otp);
+      console.log('Stored MFA Secret:', user.mfaSecret);
+      
       const verified = speakeasy.totp.verify({
         secret: user.mfaSecret,
         encoding: 'base32',
@@ -87,6 +94,7 @@ app.post('/api/verify-otp', async (req, res) => {
       });
 
       if (verified) {
+        console.log('OTP verified successfully for user:', userId);
         res.status(200).send({ success: true });
       } else {
         console.log('Invalid OTP for user:', userId);
@@ -101,6 +109,7 @@ app.post('/api/verify-otp', async (req, res) => {
     res.status(500).send('An error occurred during OTP verification');
   }
 });
+
 
 
 
