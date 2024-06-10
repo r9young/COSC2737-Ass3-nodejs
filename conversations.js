@@ -35,6 +35,9 @@ router.post('/conversations/:id/messages', async (req, res) => {
   const { senderId, text } = req.body;
   console.log(`Adding message to conversation ${id} from sender ${senderId}`);
   try {
+    if (!senderId) {
+      throw new Error('Sender ID is null');
+    }
     const collection = await db.collection('conversations');
     await collection.updateOne(
       { _id: new ObjectId(id) },
