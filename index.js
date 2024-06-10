@@ -151,7 +151,6 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
-app.use('/api', conversationRoutes);
 
 // Use conversation routes
 app.use('/api', conversationRoutes);
