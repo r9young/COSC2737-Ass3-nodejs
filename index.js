@@ -200,3 +200,4 @@ io.on('connection', (socket) => {
 
 server.listen(port, () => {
   console.log('Server is listening at port:' + port);
+});
