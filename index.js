@@ -169,7 +169,6 @@ app.get('/getUserByUsername/:username', async (req, res) => {
 
 // app.use('/api', conversationRoutes);
 
-
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
 
@@ -198,6 +197,18 @@ io.on('connection', (socket) => {
       io.to(conversationId).emit('newMessage', newMessage);
     } catch (error) {
       console.error('Error sending message:', error);
+    }
+  });
+
+  socket.on('fetchMessages', async (conversationId) => {
+    try {
+      const collection = await db.collection('conversations');
+      const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
+      if (conversation) {
+        socket.emit('messages', conversation.messages);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
     }
   });
 
