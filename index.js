@@ -193,18 +193,24 @@ io.on('connection', (socket) => {
   });
 
   socket.on('fetchMessages', async (conversationId) => {
-    console.log('Received fetchMessages event for conversationId:', conversationId);
     try {
+      if (!ObjectId.isValid(conversationId)) {
+        console.error('Invalid conversationId:', conversationId);
+        return socket.emit('messages', []); // Send empty array on error
+      }
+      
       const collection = await db.collection('conversations');
       const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
+  
       if (conversation) {
-        console.log('Fetched messages:', conversation.messages);
-        socket.emit('messages', conversation.messages);
+        socket.emit('messages', conversation.messages || []); // Send messages or empty array if none exist
       } else {
         console.log('No conversation found with ID:', conversationId);
+        socket.emit('messages', []); 
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
+      socket.emit('messages', []); 
     }
   });
 
