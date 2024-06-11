@@ -147,7 +147,8 @@ app.post('/enable-mfa', async (req, res) => {
 
 
 
-// Endpoint to get user details by username
+
+
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
 
@@ -162,14 +163,6 @@ io.on('connection', (socket) => {
 
     try {
       const collection = await db.collection('conversations');
-      
-      // Check if the conversation exists
-      const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
-      if (!conversation) {
-        console.error(`No conversation found with ID: ${conversationId}`);
-        return;
-      }
-
       const newMessage = {
         _id: new ObjectId(),
         senderId: new ObjectId(senderId),
@@ -177,6 +170,14 @@ io.on('connection', (socket) => {
         timestamp: new Date()
       };
 
+      // Verify the conversation exists
+      const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
+      if (!conversation) {
+        console.error(`No conversation found with ID: ${conversationId}`);
+        return;
+      }
+
+      console.log(`Adding message to conversation with ID: ${conversationId}`);
       const result = await collection.updateOne(
         { _id: new ObjectId(conversationId) },
         { $push: { messages: newMessage }, $set: { lastUpdated: new Date() } }
@@ -210,11 +211,10 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket.on('disconnect', () => {
+  socket on('disconnect', () => {
     console.log('user disconnected:', socket.id);
   });
 });
 
 server.listen(port, () => {
   console.log('Server is listening at port:' + port);
-});
