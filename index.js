@@ -143,28 +143,6 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
-
-
-// Endpoint to get user details by username
-app.get('/getUserByUsername/:username', async (req, res) => {
-  const username = req.params.username;
-  try {
-    let collection = await db.collection('users');
-    let user = await collection.findOne({ username });
-    if (user) {
-      res.json(user);
-    } else {
-      res.status(404).send('User not found');
-    }
-  } catch (error) {
-    console.error('Error fetching user by username:', error);
-    res.status(500).send('Server error');
-  }
-});
-
-
-
-
 app.post('/fetchMessages', async (req, res) => {
   const { conversationId } = req.body;
 
@@ -220,6 +198,8 @@ io.on('connection', (socket) => {
         { _id: new ObjectId(conversationId) },
         { $push: { messages: newMessage }, $set: { lastUpdated: new Date() } }
       );
+
+      console.log('Update result:', result);
 
       if (result.modifiedCount === 0) {
         console.error(`Failed to update conversation with ID: ${conversationId}`);
