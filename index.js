@@ -14,6 +14,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" }});
 
+
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -144,21 +145,28 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
-app.get('/getUserByUsername/:username', async (req, res) => {
-  const username = req.params.username;
-  try {
-    let collection = await db.collection('users');
-    let user = await collection.findOne({ username });
-    if (user) {
-      res.json(user);
-    } else {
-      res.status(404).send('User not found');
-    }
-  } catch (error) {
-    console.error('Error fetching user by username:', error);
-    res.status(500).send('Server error');
-  }
-});
+
+// Assuming you have a User model for your MongoDB collection
+// const User = require('./models/User');
+
+// // Endpoint to get user details by username
+// app.get('/getUserByUsername/:username', async (req, res) => {
+//   try {
+//     const user = await User.findOne({ username: req.params.username });
+//     if (user) {
+//       res.json(user);
+//     } else {
+//       res.status(404).send('User not found');
+//     }
+//   } catch (error) {
+//     console.error('Error fetching user by username:', error);
+//     res.status(500).send('Server error');
+//   }
+// });
+
+
+
+
 
 app.use('/api', conversationRoutes);
 
@@ -175,19 +183,11 @@ io.on('connection', (socket) => {
 
     try {
       const collection = await db.collection('conversations');
-      const newMessage = {
-        _id: new ObjectId(),
-        senderId: new ObjectId(senderId),
-        text,
-        timestamp: new Date()
-      };
-
       await collection.updateOne(
         { _id: new ObjectId(conversationId) },
-        { $push: { messages: newMessage }, $set: { lastUpdated: new Date() } }
+        { $push: { messages: { _id: new ObjectId(), senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
       );
-
-      io.to(conversationId).emit('newMessage', newMessage);
+      io.to(conversationId).emit('newMessage', { senderId, text, timestamp: new Date() });
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -199,5 +199,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(port, () => {
-  console.log(`Server is listening at port: ${port}`);
+  console.log('Server is listening at port:' + port);
 });
