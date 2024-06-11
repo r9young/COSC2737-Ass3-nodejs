@@ -146,9 +146,6 @@ app.post('/enable-mfa', async (req, res) => {
 });
 
 
-
-
-
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
 
@@ -211,10 +208,12 @@ io.on('connection', (socket) => {
     }
   });
 
-  socket on('disconnect', () => {
+  
+  socket.on('disconnect', () => {
     console.log('user disconnected:', socket.id);
   });
 });
 
 server.listen(port, () => {
   console.log('Server is listening at port:' + port);
+});
