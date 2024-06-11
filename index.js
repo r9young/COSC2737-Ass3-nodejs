@@ -8,27 +8,27 @@ import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
 
+
 const port = 4000;
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+const io = new Server(server, { cors: { origin: "*" }});
+
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
 
-// Basic route
 app.get('/', (req, res) => {
   res.send('Hello World, from express');
 });
 
-// Add a new user
 app.post('/addUser', async (req, res) => {
   try {
-    const collection = await db.collection('users');
-    const newDocument = req.body;
+    let collection = await db.collection('users');
+    let newDocument = req.body;
     newDocument.date = new Date();
-    const result = await collection.insertOne(newDocument);
+    let result = await collection.insertOne(newDocument);
     console.log('Request body:', req.body);
     res.status(200).send(result);
   } catch (error) {
@@ -37,11 +37,10 @@ app.post('/addUser', async (req, res) => {
   }
 });
 
-// Get all users
 app.get('/getUser', async (req, res) => {
   try {
-    const collection = await db.collection('users');
-    const results = await collection.find({}).toArray();
+    let collection = await db.collection('users');
+    let results = await collection.find({}).toArray();
     res.status(200).send(results);
   } catch (error) {
     console.error('Error:', error);
@@ -49,13 +48,12 @@ app.get('/getUser', async (req, res) => {
   }
 });
 
-// User login
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    const collection = await db.collection('users');
-    const user = await collection.findOne({ username });
+    let collection = await db.collection('users');
+    let user = await collection.findOne({ username });
 
     if (user && user.password === password) {
       const response = {
@@ -74,7 +72,6 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Verify OTP
 app.post('/api/verify-otp', async (req, res) => {
   const { otp, userId } = req.body;
 
@@ -83,8 +80,8 @@ app.post('/api/verify-otp', async (req, res) => {
       return res.status(400).json({ error: 'Invalid userId format' });
     }
 
-    const collection = await db.collection('users');
-    const user = await collection.findOne({ _id: new ObjectId(userId) });
+    let collection = await db.collection('users');
+    let user = await collection.findOne({ _id: new ObjectId(userId) });
 
     if (user && user.mfaSecret) {
       console.log('Verifying OTP for user:', userId);
@@ -114,7 +111,6 @@ app.post('/api/verify-otp', async (req, res) => {
   }
 });
 
-// Enable MFA
 app.post('/enable-mfa', async (req, res) => {
   const { userId } = req.body;
 
@@ -149,25 +145,55 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
-// // Fetch messages for a conversation
-// app.post('/fetchMessages', async (req, res) => {
-//   const { conversationId } = req.body;
 
-//   try {
-//     if (!ObjectId.isValid(conversationId)) {
-//       return res.status(400).json({ error: 'Invalid conversationId format' });
-//     }
 
-//     const collection = await db.collection('conversations');
-//     const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
+// Endpoint to get user details by username
+app.get('/getUserByUsername/:username', async (req, res) => {
+  const username = req.params.username;
+  try {
+    let collection = await db.collection('users');
+    let user = await collection.findOne({ username });
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).send('User not found');
+    }
+  } catch (error) {
+    console.error('Error fetching user by username:', error);
+    res.status(500).send('Server error');
+  }
+});
 
-//     if (conversation) {
-//       res.status(200).send(conversation.messages);
-//     } else {
-//       res.status(404).send({ error: 'Conversation not found' });
-//     }
-//   } catch (error) {
-//     console.error('Error fetching messages:', error);
-//     res.status(500).send('An error occurred');
-//   }
-// });
+
+
+io.on('connection', (socket) => {
+  console.log('a user connected:', socket.id);
+
+  socket.on('joinRoom', (roomId) => {
+    socket.join(roomId);
+    console.log(`User ${socket.id} joined room ${roomId}`);
+  });
+
+  socket.on('sendMessage', async (data) => {
+    const { conversationId, senderId, text } = data;
+
+    try {
+      const collection = await db.collection('conversations');
+      await collection.updateOne(
+        { _id: new ObjectId(conversationId) },
+        { $push: { messages: { _id: new ObjectId(), senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
+      );
+      io.to(conversationId).emit('newMessage', { senderId, text, timestamp: new Date() });
+    } catch (error) {
+      console.error('Error sending message:', error);
+    }
+  });
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected:', socket.id);
+  });
+});
+
+server.listen(port, () => {
+  console.log('Server is listening at port:' + port);
+});
