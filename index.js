@@ -146,27 +146,27 @@ app.post('/enable-mfa', async (req, res) => {
 });
 
 
-app.post('/fetchMessages', async (req, res) => {
-  const { conversationId } = req.body;
+// app.post('/fetchMessages', async (req, res) => {
+//   const { conversationId } = req.body;
 
-  try {
-    if (!ObjectId.isValid(conversationId)) {
-      return res.status(400).json({ error: 'Invalid conversationId format' });
-    }
+//   try {
+//     if (!ObjectId.isValid(conversationId)) {
+//       return res.status(400).json({ error: 'Invalid conversationId format' });
+//     }
 
-    let collection = await db.collection('conversations');
-    let conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
+//     let collection = await db.collection('conversations');
+//     let conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
 
-    if (conversation) {
-      res.status(200).send(conversation.messages);
-    } else {
-      res.status(404).send({ error: 'Conversation not found' });
-    }
-  } catch (error) {
-    console.error('Error fetching messages:', error);
-    res.status(500).send('An error occurred');
-  }
-});
+//     if (conversation) {
+//       res.status(200).send(conversation.messages);
+//     } else {
+//       res.status(404).send({ error: 'Conversation not found' });
+//     }
+//   } catch (error) {
+//     console.error('Error fetching messages:', error);
+//     res.status(500).send('An error occurred');
+//   }
+// });
 
 
 
