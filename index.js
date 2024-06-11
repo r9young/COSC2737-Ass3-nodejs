@@ -148,26 +148,6 @@ app.post('/enable-mfa', async (req, res) => {
 
 
 // Endpoint to get user details by username
-app.get('/getUserByUsername/:username', async (req, res) => {
-  const username = req.params.username;
-  try {
-    let collection = await db.collection('users');
-    let user = await collection.findOne({ username });
-    if (user) {
-      res.json(user);
-    } else {
-      res.status(404).send('User not found');
-    }
-  } catch (error) {
-    console.error('Error fetching user by username:', error);
-    res.status(500).send('Server error');
-  }
-});
-
-
-
-
-// app.use('/api', conversationRoutes);
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
 
@@ -182,6 +162,14 @@ io.on('connection', (socket) => {
 
     try {
       const collection = await db.collection('conversations');
+      
+      // Check if the conversation exists
+      const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
+      if (!conversation) {
+        console.error(`No conversation found with ID: ${conversationId}`);
+        return;
+      }
+
       const newMessage = {
         _id: new ObjectId(),
         senderId: new ObjectId(senderId),
@@ -194,10 +182,13 @@ io.on('connection', (socket) => {
         { $push: { messages: newMessage }, $set: { lastUpdated: new Date() } }
       );
 
-      console.log('New message added to conversation:', newMessage);
-      console.log('Update result:', result);
+      if (result.modifiedCount === 0) {
+        console.error(`Failed to update conversation with ID: ${conversationId}`);
+      } else {
+        console.log('New message added to conversation:', newMessage);
+        io.to(conversationId).emit('newMessage', newMessage);
+      }
 
-      io.to(conversationId).emit('newMessage', newMessage);
     } catch (error) {
       console.error('Error sending message:', error);
     }
