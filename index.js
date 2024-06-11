@@ -145,29 +145,6 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
-
-// Assuming you have a User model for your MongoDB collection
-const User = require('./models/User');
-
-// Endpoint to get user details by username
-app.get('/getUserByUsername/:username', async (req, res) => {
-  try {
-    const user = await User.findOne({ username: req.params.username });
-    if (user) {
-      res.json(user);
-    } else {
-      res.status(404).send('User not found');
-    }
-  } catch (error) {
-    console.error('Error fetching user by username:', error);
-    res.status(500).send('Server error');
-  }
-});
-
-
-
-
-
 app.use('/api', conversationRoutes);
 
 io.on('connection', (socket) => {
@@ -201,3 +178,40 @@ io.on('connection', (socket) => {
 server.listen(port, () => {
   console.log('Server is listening at port:' + port);
 });
+
+
+
+
+// app.use('/api', conversationRoutes);
+
+// io.on('connection', (socket) => {
+//   console.log('a user connected:', socket.id);
+
+//   socket.on('joinRoom', (roomId) => {
+//     socket.join(roomId);
+//     console.log(`User ${socket.id} joined room ${roomId}`);
+//   });
+
+//   socket.on('sendMessage', async (data) => {
+//     const { conversationId, senderId, text } = data;
+
+//     try {
+//       const collection = await db.collection('conversations');
+//       await collection.updateOne(
+//         { _id: new ObjectId(conversationId) },
+//         { $push: { messages: { _id: new ObjectId(), senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
+//       );
+//       io.to(conversationId).emit('newMessage', { senderId, text, timestamp: new Date() });
+//     } catch (error) {
+//       console.error('Error sending message:', error);
+//     }
+//   });
+
+//   socket.on('disconnect', () => {
+//     console.log('user disconnected:', socket.id);
+//   });
+// });
+
+// server.listen(port, () => {
+//   console.log('Server is listening at port:' + port);
+// });
