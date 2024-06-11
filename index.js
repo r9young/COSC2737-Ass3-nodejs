@@ -14,6 +14,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" }});
 
+
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -144,11 +145,14 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
+
+// Assuming you have a User model for your MongoDB collection
+const User = require('./models/User');
+
+// Endpoint to get user details by username
 app.get('/getUserByUsername/:username', async (req, res) => {
-  const username = req.params.username;
   try {
-    let collection = await db.collection('users');
-    let user = await collection.findOne({ username });
+    const user = await User.findOne({ username: req.params.username });
     if (user) {
       res.json(user);
     } else {
@@ -159,6 +163,10 @@ app.get('/getUserByUsername/:username', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
+
+
+
+
 
 app.use('/api', conversationRoutes);
 
@@ -192,4 +200,3 @@ io.on('connection', (socket) => {
 
 server.listen(port, () => {
   console.log('Server is listening at port:' + port);
-});
