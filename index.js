@@ -145,20 +145,20 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
-app.get('/getUserByUsername/:username', async (req, res) => {
-  const username = req.params.username;
-  try {
-    const user = await User.findOne({ username });
-    if (user) {
-      res.json(user);
-    } else {
-      res.status(404).send('User not found');
-    }
-  } catch (error) {
-    console.error('Error fetching user by username:', error);
-    res.status(500).send('Server error');
-  }
-});
+// app.get('/getUserByUsername/:username', async (req, res) => {
+//   const username = req.params.username;
+//   try {
+//     const user = await User.findOne({ username });
+//     if (user) {
+//       res.json(user);
+//     } else {
+//       res.status(404).send('User not found');
+//     }
+//   } catch (error) {
+//     console.error('Error fetching user by username:', error);
+//     res.status(500).send('Server error');
+//   }
+// });
 
 
 // app.use('/api', conversationRoutes);
