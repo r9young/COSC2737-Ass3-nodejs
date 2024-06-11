@@ -7,7 +7,7 @@ import db from './mongoC.js';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
-import conversationRoutes from './conversations.js';
+
 
 const port = 4000;
 const app = express();
@@ -168,7 +168,6 @@ app.get('/getUserByUsername/:username', async (req, res) => {
 
 
 // app.use('/api', conversationRoutes);
-
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
 
@@ -179,6 +178,7 @@ io.on('connection', (socket) => {
 
   socket.on('sendMessage', async (data) => {
     const { conversationId, senderId, text } = data;
+    console.log('Received sendMessage event with data:', data);
 
     try {
       const collection = await db.collection('conversations');
@@ -189,10 +189,13 @@ io.on('connection', (socket) => {
         timestamp: new Date()
       };
 
-      await collection.updateOne(
+      const result = await collection.updateOne(
         { _id: new ObjectId(conversationId) },
         { $push: { messages: newMessage }, $set: { lastUpdated: new Date() } }
       );
+
+      console.log('New message added to conversation:', newMessage);
+      console.log('Update result:', result);
 
       io.to(conversationId).emit('newMessage', newMessage);
     } catch (error) {
@@ -201,11 +204,15 @@ io.on('connection', (socket) => {
   });
 
   socket.on('fetchMessages', async (conversationId) => {
+    console.log('Received fetchMessages event for conversationId:', conversationId);
     try {
       const collection = await db.collection('conversations');
       const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
       if (conversation) {
+        console.log('Fetched messages:', conversation.messages);
         socket.emit('messages', conversation.messages);
+      } else {
+        console.log('No conversation found with ID:', conversationId);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
