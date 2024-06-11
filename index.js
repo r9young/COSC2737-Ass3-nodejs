@@ -9,11 +9,13 @@ import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
 import conversationRoutes from './conversations.js';
 
+// Assuming you have a User model for your MongoDB collection
+const User = require('./models/User');
+
 const port = 4000;
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" }});
-
 
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -25,10 +27,9 @@ app.get('/', (req, res) => {
 
 app.post('/addUser', async (req, res) => {
   try {
-    let collection = await db.collection('users');
-    let newDocument = req.body;
-    newDocument.date = new Date();
-    let result = await collection.insertOne(newDocument);
+    const collection = await db.collection('users');
+    const newDocument = { ...req.body, date: new Date() };
+    const result = await collection.insertOne(newDocument);
     console.log('Request body:', req.body);
     res.status(200).send(result);
   } catch (error) {
@@ -39,8 +40,8 @@ app.post('/addUser', async (req, res) => {
 
 app.get('/getUser', async (req, res) => {
   try {
-    let collection = await db.collection('users');
-    let results = await collection.find({}).toArray();
+    const collection = await db.collection('users');
+    const results = await collection.find({}).toArray();
     res.status(200).send(results);
   } catch (error) {
     console.error('Error:', error);
@@ -52,8 +53,8 @@ app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
   try {
-    let collection = await db.collection('users');
-    let user = await collection.findOne({ username });
+    const collection = await db.collection('users');
+    const user = await collection.findOne({ username });
 
     if (user && user.password === password) {
       const response = {
@@ -80,8 +81,8 @@ app.post('/api/verify-otp', async (req, res) => {
       return res.status(400).json({ error: 'Invalid userId format' });
     }
 
-    let collection = await db.collection('users');
-    let user = await collection.findOne({ _id: new ObjectId(userId) });
+    const collection = await db.collection('users');
+    const user = await collection.findOne({ _id: new ObjectId(userId) });
 
     if (user && user.mfaSecret) {
       console.log('Verifying OTP for user:', userId);
@@ -120,7 +121,6 @@ app.post('/enable-mfa', async (req, res) => {
     }
 
     const objectId = new ObjectId(userId);
-
     const secret = speakeasy.generateSecret({ length: 20 });
 
     await db.collection('users').updateOne({ _id: objectId }, { $set: { mfaSecret: secret.base32 } });
@@ -145,49 +145,10 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
-app.use('/api', conversationRoutes);
-
-io.on('connection', (socket) => {
-  console.log('a user connected:', socket.id);
-
-  socket.on('joinRoom', (roomId) => {
-    socket.join(roomId);
-    console.log(`User ${socket.id} joined room ${roomId}`);
-  });
-
-  socket.on('sendMessage', async (data) => {
-    const { conversationId, senderId, text } = data;
-
-    try {
-      const collection = await db.collection('conversations');
-      await collection.updateOne(
-        { _id: new ObjectId(conversationId) },
-        { $push: { messages: { _id: new ObjectId(), senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
-      );
-      io.to(conversationId).emit('newMessage', { senderId, text, timestamp: new Date() });
-    } catch (error) {
-      console.error('Error sending message:', error);
-    }
-  });
-
-  socket.on('disconnect', () => {
-    console.log('user disconnected:', socket.id);
-  });
-});
-
-server.listen(port, () => {
-  console.log('Server is listening at port:' + port);
-});
-
-
-
-// Assuming you have a User model for your MongoDB collection
-const User = require('./models/User');
-
-// Endpoint to get user details by username
 app.get('/getUserByUsername/:username', async (req, res) => {
+  const username = req.params.username;
   try {
-    const user = await User.findOne({ username: req.params.username });
+    const user = await User.findOne({ username });
     if (user) {
       res.json(user);
     } else {
@@ -198,9 +159,6 @@ app.get('/getUserByUsername/:username', async (req, res) => {
     res.status(500).send('Server error');
   }
 });
-
-
-
 
 
 // app.use('/api', conversationRoutes);
