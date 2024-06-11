@@ -179,7 +179,6 @@ io.on('connection', (socket) => {
 
   socket.on('sendMessage', async (data) => {
     const { conversationId, senderId, text } = data;
-    console.log('Received sendMessage event with data:', data);
 
     try {
       const collection = await db.collection('conversations');
@@ -195,7 +194,6 @@ io.on('connection', (socket) => {
         { $push: { messages: newMessage }, $set: { lastUpdated: new Date() } }
       );
 
-      console.log('New message added to conversation:', newMessage);
       io.to(conversationId).emit('newMessage', newMessage);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -203,15 +201,11 @@ io.on('connection', (socket) => {
   });
 
   socket.on('fetchMessages', async (conversationId) => {
-    console.log('Received fetchMessages event for conversationId:', conversationId);
     try {
       const collection = await db.collection('conversations');
       const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
       if (conversation) {
-        console.log('Fetched messages:', conversation.messages);
         socket.emit('messages', conversation.messages);
-      } else {
-        console.log('No conversation found with ID:', conversationId);
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
@@ -221,4 +215,8 @@ io.on('connection', (socket) => {
   socket.on('disconnect', () => {
     console.log('user disconnected:', socket.id);
   });
+});
+
+server.listen(port, () => {
+  console.log('Server is listening at port:' + port);
 });
