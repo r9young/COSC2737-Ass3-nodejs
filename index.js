@@ -166,8 +166,6 @@ app.post('/fetchMessages', async (req, res) => {
 });
 
 
-
-// Temporary endpoint to test sending messages
 app.post('/sendMessage', async (req, res) => {
   const { conversationId, senderId, text } = req.body;
   console.log('Received sendMessage event with data:', req.body);
@@ -207,9 +205,10 @@ app.post('/sendMessage', async (req, res) => {
 
   } catch (error) {
     console.error('Error sending message:', error);
-    res.status(500).send('Error sending message');
+    res.status(500).send(`Error sending message: ${error.message}`);
   }
 });
+
 
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
