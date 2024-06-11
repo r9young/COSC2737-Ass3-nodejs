@@ -30,3 +30,13 @@ Run Tests:
 sh
 Copy code
 npm test
+
+
+
+curl -X POST http://13.54.65.192:4000/sendMessage \                           
+-H "Content-Type: application/json" \
+-d '{
+  "conversationId": "your_conversation_id",
+  "senderId": "your_sender_id",
+  "text": "your_message_text"
+}'

@@ -165,6 +165,52 @@ app.post('/fetchMessages', async (req, res) => {
   }
 });
 
+
+
+// Temporary endpoint to test sending messages
+app.post('/sendMessage', async (req, res) => {
+  const { conversationId, senderId, text } = req.body;
+  console.log('Received sendMessage event with data:', req.body);
+
+  try {
+    const collection = await db.collection('conversations');
+    const newMessage = {
+      _id: new ObjectId(),
+      senderId: new ObjectId(senderId),
+      text,
+      timestamp: new Date()
+    };
+
+    // Verify the conversation exists
+    const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
+    if (!conversation) {
+      console.error(`No conversation found with ID: ${conversationId}`);
+      return res.status(404).send(`No conversation found with ID: ${conversationId}`);
+    }
+
+    console.log(`Adding message to conversation with ID: ${conversationId}`);
+    const result = await collection.updateOne(
+      { _id: new ObjectId(conversationId) },
+      { $push: { messages: newMessage }, $set: { lastUpdated: new Date() } }
+    );
+
+    console.log('Update result:', result);
+
+    if (result.modifiedCount === 0) {
+      console.error(`Failed to update conversation with ID: ${conversationId}`);
+      res.status(500).send(`Failed to update conversation with ID: ${conversationId}`);
+    } else {
+      console.log('New message added to conversation:', newMessage);
+      io.to(conversationId).emit('newMessage', newMessage);
+      res.status(200).send('Message sent and stored successfully');
+    }
+
+  } catch (error) {
+    console.error('Error sending message:', error);
+    res.status(500).send('Error sending message');
+  }
+});
+
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
 
