@@ -7,7 +7,7 @@ import db from './mongoC.js';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
-import conversationRoutes from './conversations.js';
+
 
 const port = 4000;
 const app = express();
