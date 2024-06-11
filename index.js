@@ -166,6 +166,28 @@ app.get('/getUserByUsername/:username', async (req, res) => {
 
 
 
+app.post('/fetchMessages', async (req, res) => {
+  const { conversationId } = req.body;
+
+  try {
+    if (!ObjectId.isValid(conversationId)) {
+      return res.status(400).json({ error: 'Invalid conversationId format' });
+    }
+
+    let collection = await db.collection('conversations');
+    let conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
+
+    if (conversation) {
+      res.status(200).send(conversation.messages);
+    } else {
+      res.status(404).send({ error: 'Conversation not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).send('An error occurred');
+  }
+});
+
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
 
@@ -176,16 +198,55 @@ io.on('connection', (socket) => {
 
   socket.on('sendMessage', async (data) => {
     const { conversationId, senderId, text } = data;
+    console.log('Received sendMessage event with data:', data);
 
     try {
       const collection = await db.collection('conversations');
-      await collection.updateOne(
+      const newMessage = {
+        _id: new ObjectId(),
+        senderId: new ObjectId(senderId),
+        text,
+        timestamp: new Date()
+      };
+
+      // Verify the conversation exists
+      const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
+      if (!conversation) {
+        console.error(`No conversation found with ID: ${conversationId}`);
+        return;
+      }
+
+      console.log(`Adding message to conversation with ID: ${conversationId}`);
+      const result = await collection.updateOne(
         { _id: new ObjectId(conversationId) },
-        { $push: { messages: { _id: new ObjectId(), senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
+        { $push: { messages: newMessage }, $set: { lastUpdated: new Date() } }
       );
-      io.to(conversationId).emit('newMessage', { senderId, text, timestamp: new Date() });
+
+      if (result.modifiedCount === 0) {
+        console.error(`Failed to update conversation with ID: ${conversationId}`);
+      } else {
+        console.log('New message added to conversation:', newMessage);
+        io.to(conversationId).emit('newMessage', newMessage);
+      }
+
     } catch (error) {
       console.error('Error sending message:', error);
+    }
+  });
+
+  socket.on('fetchMessages', async (conversationId) => {
+    console.log('Received fetchMessages event for conversationId:', conversationId);
+    try {
+      const collection = await db.collection('conversations');
+      const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
+      if (conversation) {
+        console.log('Fetched messages:', conversation.messages);
+        socket.emit('messages', conversation.messages);
+      } else {
+        console.log('No conversation found with ID:', conversationId);
+      }
+    } catch (error) {
+      console.error('Error fetching messages:', error);
     }
   });
 
