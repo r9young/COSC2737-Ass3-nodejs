@@ -175,11 +175,19 @@ io.on('connection', (socket) => {
 
     try {
       const collection = await db.collection('conversations');
+      const newMessage = {
+        _id: new ObjectId(),
+        senderId: new ObjectId(senderId),
+        text,
+        timestamp: new Date()
+      };
+
       await collection.updateOne(
         { _id: new ObjectId(conversationId) },
-        { $push: { messages: { _id: new ObjectId(), senderId: new ObjectId(senderId), text, timestamp: new Date() } }, $set: { lastUpdated: new Date() } }
+        { $push: { messages: newMessage }, $set: { lastUpdated: new Date() } }
       );
-      io.to(conversationId).emit('newMessage', { senderId, text, timestamp: new Date() });
+
+      io.to(conversationId).emit('newMessage', newMessage);
     } catch (error) {
       console.error('Error sending message:', error);
     }
@@ -191,5 +199,5 @@ io.on('connection', (socket) => {
 });
 
 server.listen(port, () => {
-  console.log('Server is listening at port:' + port);
+  console.log(`Server is listening at port: ${port}`);
 });
