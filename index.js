@@ -145,7 +145,6 @@ app.post('/enable-mfa', async (req, res) => {
   }
 });
 
-
 io.on('connection', (socket) => {
   console.log('a user connected:', socket.id);
 
@@ -193,33 +192,22 @@ io.on('connection', (socket) => {
   });
 
   socket.on('fetchMessages', async (conversationId) => {
+    console.log('Received fetchMessages event for conversationId:', conversationId);
     try {
-      if (!ObjectId.isValid(conversationId)) {
-        console.error('Invalid conversationId:', conversationId);
-        return socket.emit('messages', []); // Send empty array on error
-      }
-      
       const collection = await db.collection('conversations');
       const conversation = await collection.findOne({ _id: new ObjectId(conversationId) });
-  
       if (conversation) {
-        socket.emit('messages', conversation.messages || []); // Send messages or empty array if none exist
+        console.log('Fetched messages:', conversation.messages);
+        socket.emit('messages', conversation.messages);
       } else {
         console.log('No conversation found with ID:', conversationId);
-        socket.emit('messages', []); 
       }
     } catch (error) {
       console.error('Error fetching messages:', error);
-      socket.emit('messages', []); 
     }
   });
 
-  
   socket.on('disconnect', () => {
     console.log('user disconnected:', socket.id);
   });
-});
-
-server.listen(port, () => {
-  console.log('Server is listening at port:' + port);
 });
