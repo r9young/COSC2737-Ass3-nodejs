@@ -69,48 +69,6 @@ router.get('/conversations/:id/messages', async (req, res) => {
     console.error('Error fetching messages:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch messages' });
   }
-});                   
+});
 
 export default router;
-
-
-
-io.on('connection', (socket) => {
-    console.log('a user connected:', socket.id);
-  
-    socket.on('joinRoom', (roomId) => {
-      socket.join(roomId);
-      console.log(`User ${socket.id} joined room ${roomId}`);
-    });
-  
-    socket.on('sendMessage', async (data) => {
-      const { conversationId, senderId, text } = data;
-  
-      try {
-        const collection = await db.collection('conversations');
-        const newMessage = {
-          _id: new ObjectId(),
-          senderId: new ObjectId(senderId),
-          text,
-          timestamp: new Date()
-        };
-  
-        await collection.updateOne(
-          { _id: new ObjectId(conversationId) },
-          { $push: { messages: newMessage }, $set: { lastUpdated: new Date() } }
-        );
-  
-        io.to(conversationId).emit('newMessage', newMessage);
-      } catch (error) {
-        console.error('Error sending message:', error);
-      }
-    });
-  
-    socket.on('disconnect', () => {
-      console.log('user disconnected:', socket.id);
-    });
-  });
-  
-  server.listen(port, () => {
-    console.log('Server is listening at port:' + port);
-  });
