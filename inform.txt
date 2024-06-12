@@ -45,6 +45,8 @@ curl -X POST http://13.54.65.192:4000/sendMessage \
 curl -X POST http://13.54.65.192:4000/reset-password \
 -H "Content-Type: application/json" \
 -d '{
-  "token": "a9bbabd967098e85996ff68ba70550ef5dc60abd05f1ed7d6269bf67c164df77",
-  "password": "test"
+  "token": "413b7787e64ea6a654e3d4a69bc26a7a3a67573d52e74e171033c6ad33ae1e69",
+  "password": "test1"
 }'
+
+http://13.54.65.192:3000/reset-password?token=413b7787e64ea6a654e3d4a69bc26a7a3a67573d52e74e171033c6ad33ae1e69
