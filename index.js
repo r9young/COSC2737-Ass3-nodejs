@@ -65,10 +65,9 @@ app.post('/password-reset-request', async (req, res) => {
       { $set: { verificationCode, verificationCodeExpires } }
     );
 
-    const resetLink = `http://13.54.65.192:3000/reset-password?code=${verificationCode}`;
     const subject = 'Password Reset Request';
-    const text = `Hello, you requested a password reset. Please use the following link to reset your password: ${resetLink}`;
-    const html = `<p>Hello,</p><p>You requested a password reset. Please use the following link to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`;
+    const text = `Hello, you requested a password reset. Your verification code is: ${verificationCode}`;
+    const html = `<p>Hello,</p><p>You requested a password reset. Your verification code is:</p><p><strong>${verificationCode}</strong></p>`;
 
     sendMail(user.username, subject, text, html);
     res.status(200).send('Password reset email sent');
@@ -106,7 +105,6 @@ app.post('/reset-password', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
-
 
 //get user
 
