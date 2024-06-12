@@ -43,34 +43,34 @@ app.get('*', (req, res) => {
 // Existing routes
 app.use(express.json());
 
+
+
 // Endpoint for password reset request
 app.post('/password-reset-request', async (req, res) => {
-  const { username } = req.body; // Use username instead of email
+  const { username } = req.body;
 
   try {
     const collection = await db.collection('users');
-    const user = await collection.findOne({ username }); // Query using username
+    const user = await collection.findOne({ username });
 
     if (!user) {
       return res.status(404).send('User not found');
     }
 
-    // Generate a reset code and expiration time
-    const resetCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
-    const resetCodeExpires = Date.now() + 3600000; // Code valid for 1 hour
+    const verificationCode = Math.floor(100000 + Math.random() * 900000).toString(); // Generate 6-digit code
+    const verificationCodeExpires = Date.now() + 3600000; // Code valid for 1 hour
 
-    // Save the code and expiration in the user's document
     await collection.updateOne(
       { _id: user._id },
-      { $set: { resetCode, resetCodeExpires } }
+      { $set: { verificationCode, verificationCodeExpires } }
     );
 
+    const resetLink = `http://13.54.65.192:3000/reset-password?code=${verificationCode}`;
     const subject = 'Password Reset Request';
-    const text = `Hello, you requested a password reset. Please use the following code to reset your password: ${resetCode}`;
-    const html = `<p>Hello,</p><p>You requested a password reset. Please use the following code to reset your password:</p><p><b>${resetCode}</b></p>`;
+    const text = `Hello, you requested a password reset. Please use the following link to reset your password: ${resetLink}`;
+    const html = `<p>Hello,</p><p>You requested a password reset. Please use the following link to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`;
 
-    // Send the email
-    sendMail(user.username, subject, text, html); // Send email to user's email address
+    sendMail(user.username, subject, text, html);
     res.status(200).send('Password reset email sent');
   } catch (error) {
     console.error('Error:', error);
@@ -85,6 +85,9 @@ app.post('/reset-password', async (req, res) => {
   try {
     const collection = await db.collection('users');
     const user = await collection.findOne({ verificationCode: code, verificationCodeExpires: { $gt: Date.now() } });
+
+    // Debugging: Print user details
+    console.log('User found for reset-password:', user);
 
     if (!user) {
       return res.status(400).send('Invalid or expired code');
@@ -103,7 +106,6 @@ app.post('/reset-password', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
-
 
 
 //get user
