@@ -33,7 +33,7 @@ app.post('/password-reset-request', async (req, res) => {
 
   try {
     const collection = await db.collection('users');
-    const user = await collection.findOne({ email });
+    const user = await collection.findOne({ username });
 
     if (!user) {
       return res.status(404).send('User not found');
