@@ -32,20 +32,12 @@ app.post('/addUser', async (req, res) => {
     newDocument.date = new Date();
     const result = await collection.insertOne(newDocument);
     console.log('Request body:', req.body);
-
-    // Check if email exists in the request body
-    if (newDocument.email) {
-      // Send welcome email
-      sendMail(newDocument.email, 'Welcome!', 'Hello and welcome!', '<b>Hello and welcome!</b>');
-    } else {
-      console.error('Email address not provided');
-    }
-
     res.status(200).send(result);
-    } catch (error) {
-      console.error('Error:', error);
-      res.status(500).send('An error occurred');
-    }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('An error occurred');
+  }
+  
 });
 
 app.get('/getUser', async (req, res) => {
