@@ -11,7 +11,7 @@ const transporter = nodemailer.createTransport({
 
 export const sendMail = (to, subject, text, html) => {
   const mailOptions = {
-    from: 'sender@example.com', // Sender address
+    from: 'r9young@hotmail.com', // Sender address
     to: to, // Recipient address
     subject: subject, // Subject line
     text: text, // Plain text body

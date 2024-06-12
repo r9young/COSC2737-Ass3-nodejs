@@ -25,6 +25,17 @@ app.get('/', (req, res) => {
 
 // Existing routes
 
+
+// New endpoint for testing email functionality
+app.post('/sendTestEmail', (req, res) => {
+  const { to, subject, text, html } = req.body;
+  sendMail(to, subject, text, html);
+  res.status(200).send('Test email sent');
+});
+
+
+//get user
+
 app.post('/addUser', async (req, res) => {
   try {
     const collection = await db.collection('users');
