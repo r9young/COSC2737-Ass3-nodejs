@@ -67,7 +67,7 @@ app.post('/password-reset-request', async (req, res) => {
 
 
 
-// Endpoint for handling password reset
+
 
 // Endpoint for password reset request
 app.post('/password-reset-request', async (req, res) => {

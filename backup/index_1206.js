@@ -9,6 +9,7 @@ import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
 import conversationRoutes from './conversations.js'; // Ensure this path is correct
 import { sendMail } from './mail.js';
+import crypto from 'crypto';
 
 const port = 4000;
 const app = express();
@@ -25,6 +26,118 @@ app.get('/', (req, res) => {
 
 // Existing routes
 
+app.use(express.json());
+
+
+// Endpoint for password reset request
+app.post('/password-reset-request', async (req, res) => {
+  const { username } = req.body; // Use username instead of email
+
+  try {
+    const collection = await db.collection('users');
+    const user = await collection.findOne({ username }); // Query using username
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    // Generate a reset token and expiration time
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = Date.now() + 3600000; // Token valid for 1 hour
+
+    // Save the token and expiration in the user's document
+    await collection.updateOne(
+      { _id: user._id },
+      { $set: { resetToken, resetTokenExpires } }
+    );
+
+    const resetLink = `http://13.54.65.192:3000/reset-password?token=${resetToken}`;
+    const subject = 'Password Reset Request';
+    const text = `Hello, you requested a password reset. Please use the following link to reset your password: ${resetLink}`;
+    const html = `<p>Hello,</p><p>You requested a password reset. Please use the following link to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`;
+
+    // Send the email
+    sendMail(user.username, subject, text, html); // Send email to user's email address
+    res.status(200).send('Password reset email sent');
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('An error occurred');
+  }
+});
+
+
+
+// Endpoint for handling password reset
+
+// Endpoint for password reset request
+app.post('/password-reset-request', async (req, res) => {
+  const { username } = req.body; // Use username instead of email
+
+  try {
+    const collection = await db.collection('users');
+    const user = await collection.findOne({ username }); // Query using username
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    // Generate a reset token and expiration time
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = Date.now() + 3600000; // Token valid for 1 hour
+
+    // Save the token and expiration in the user's document
+    await collection.updateOne(
+      { _id: user._id },
+      { $set: { resetToken, resetTokenExpires } }
+    );
+
+    const resetLink = `http://13.54.65.192:3000/reset-password?token=${resetToken}`;
+    const subject = 'Password Reset Request';
+    const text = `Hello, you requested a password reset. Please use the following link to reset your password: ${resetLink}`;
+    const html = `<p>Hello,</p><p>You requested a password reset. Please use the following link to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`;
+
+    // Send the email
+    sendMail(user.username, subject, text, html); // Send email to user's email address
+    res.status(200).send('Password reset email sent');
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('An error occurred');
+  }
+});
+
+// Endpoint for handling password reset
+app.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+
+  try {
+    const collection = await db.collection('users');
+    const user = await collection.findOne({ resetToken: token, resetTokenExpires: { $gt: Date.now() } });
+
+    if (!user) {
+      return res.status(400).send('Invalid or expired token');
+    }
+
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+
+    await collection.updateOne(
+      { _id: user._id },
+      { $set: { password: hashedPassword }, $unset: { resetToken: "", resetTokenExpires: "" } }
+    );
+
+    res.status(200).send('Password has been reset successfully');
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).send('An error occurred');
+  }
+});
+
+
+
+
+
+
+//get user
+
 app.post('/addUser', async (req, res) => {
   try {
     const collection = await db.collection('users');
@@ -32,12 +145,20 @@ app.post('/addUser', async (req, res) => {
     newDocument.date = new Date();
     const result = await collection.insertOne(newDocument);
     console.log('Request body:', req.body);
+
+    // Check if email exists in the request body
+    if (newDocument.email) {
+      // Send welcome email
+      sendMail(newDocument.email, 'Welcome!', 'Hello and welcome!', '<b>Hello and welcome!</b>');
+    } else {
+      console.error('Email address not provided');
+    }
+
     res.status(200).send(result);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('An error occurred');
-  }
-  
+    } catch (error) {
+      console.error('Error:', error);
+      res.status(500).send('An error occurred');
+    }
 });
 
 app.get('/getUser', async (req, res) => {
