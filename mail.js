@@ -4,14 +4,14 @@ const transporter = nodemailer.createTransport({
   host: 'sandbox.smtp.mailtrap.io',
   port: 2525, // You can also use 25, 465, or 587
   auth: {
-    user: '3f8ef859bccae', // Your Mailtrap username
+    user: '3f8ef859bccaee', // Your Mailtrap username
     pass: '1708476ca12249' // Your Mailtrap password (replace this with the actual password)
   }
 });
 
 export const sendMail = (to, subject, text, html) => {
   const mailOptions = {
-    from: 'r9young@hotmail.com', // Sender address
+    from: 'sender@example.com', // Sender address
     to: to, // Recipient address
     subject: subject, // Subject line
     text: text, // Plain text body
