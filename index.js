@@ -68,6 +68,38 @@ app.post('/password-reset-request', async (req, res) => {
   }
 });
 
+
+
+// Endpoint for handling password reset
+app.post('/reset-password', async (req, res) => {
+  const { token, password } = req.body;
+
+  try {
+    const collection = await db.collection('users');
+    const user = await collection.findOne({ resetToken: token, resetTokenExpires: { $gt: Date.now() } });
+
+    if (!user) {
+      return res.status(400).send('Invalid or expired token');
+    }
+
+    const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
+
+    await collection.updateOne(
+      { _id: user._id },
+      { $set: { password: hashedPassword }, $unset: { resetToken: "", resetTokenExpires: "" } }
+    );
+
+    res.status(200).send('Password has been reset successfully');
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    res.status(500).send('An error occurred');
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
+
 //get user
 
 app.post('/addUser', async (req, res) => {
