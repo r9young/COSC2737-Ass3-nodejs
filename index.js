@@ -63,7 +63,7 @@ app.post('/password-reset-request', async (req, res) => {
       { $set: { resetToken, resetTokenExpires } }
     );
 
-    const resetLink = `http://13.54.65.192:3000/reset-password?token=${resetToken}`;
+    const resetLink = `http://13.54.65.192:4000/reset-password?token=${resetToken}`;
     const subject = 'Password Reset Request';
     const text = `Hello, you requested a password reset. Please use the following link to reset your password: ${resetLink}`;
     const html = `<p>Hello,</p><p>You requested a password reset. Please use the following link to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`;
