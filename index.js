@@ -16,6 +16,7 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
+
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -27,13 +28,17 @@ app.get('/', (req, res) => {
 // Existing routes
 
 
+
+app.use(express.json());
+
+
 // Endpoint for password reset request
 app.post('/password-reset-request', async (req, res) => {
-  const { email } = req.body;
+  const { username } = req.body; // Use username instead of email
 
   try {
     const collection = await db.collection('users');
-    const user = await collection.findOne({ username });
+    const user = await collection.findOne({ username }); // Query using username
 
     if (!user) {
       return res.status(404).send('User not found');
@@ -55,14 +60,13 @@ app.post('/password-reset-request', async (req, res) => {
     const html = `<p>Hello,</p><p>You requested a password reset. Please use the following link to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`;
 
     // Send the email
-    sendMail(email, subject, text, html);
+    sendMail(user.username, subject, text, html); // Send email to user's email address
     res.status(200).send('Password reset email sent');
   } catch (error) {
     console.error('Error:', error);
     res.status(500).send('An error occurred');
   }
 });
-
 
 //get user
 
