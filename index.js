@@ -29,7 +29,10 @@ app.use(bodyParser.json());
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-// Serve React app for specific routes
+app.get('/password-reset-request', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
+
 app.get('/reset-password', (req, res) => {
   res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
@@ -37,7 +40,6 @@ app.get('/reset-password', (req, res) => {
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
 });
-
 // Existing routes
 app.use(express.json());
 
