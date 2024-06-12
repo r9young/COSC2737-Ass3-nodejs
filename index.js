@@ -53,20 +53,19 @@ app.post('/password-reset-request', async (req, res) => {
       return res.status(404).send('User not found');
     }
 
-    // Generate a reset token and expiration time
-    const resetToken = crypto.randomBytes(32).toString('hex');
-    const resetTokenExpires = Date.now() + 3600000; // Token valid for 1 hour
+    // Generate a reset code and expiration time
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit code
+    const resetCodeExpires = Date.now() + 3600000; // Code valid for 1 hour
 
-    // Save the token and expiration in the user's document
+    // Save the code and expiration in the user's document
     await collection.updateOne(
       { _id: user._id },
-      { $set: { resetToken, resetTokenExpires } }
+      { $set: { resetCode, resetCodeExpires } }
     );
 
-    const resetLink = `http://13.54.65.192:3000/reset-password?token=${resetToken}`;
     const subject = 'Password Reset Request';
-    const text = `Hello, you requested a password reset. Please use the following link to reset your password: ${resetLink}`;
-    const html = `<p>Hello,</p><p>You requested a password reset. Please use the following link to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`;
+    const text = `Hello, you requested a password reset. Please use the following code to reset your password: ${resetCode}`;
+    const html = `<p>Hello,</p><p>You requested a password reset. Please use the following code to reset your password:</p><p><b>${resetCode}</b></p>`;
 
     // Send the email
     sendMail(user.username, subject, text, html); // Send email to user's email address
@@ -77,23 +76,23 @@ app.post('/password-reset-request', async (req, res) => {
   }
 });
 
-// Endpoint for handling password reset
-app.post('/reset-password', async (req, res) => {
-  const { token, password } = req.body;
+// Endpoint for handling password reset with code
+app.post('/reset-password-with-code', async (req, res) => {
+  const { code, password } = req.body;
 
   try {
     const collection = await db.collection('users');
-    const user = await collection.findOne({ resetToken: token, resetTokenExpires: { $gt: Date.now() } });
+    const user = await collection.findOne({ resetCode: code, resetCodeExpires: { $gt: Date.now() } });
 
     if (!user) {
-      return res.status(400).send('Invalid or expired token');
+      return res.status(400).send('Invalid or expired code');
     }
 
     const hashedPassword = crypto.createHash('sha256').update(password).digest('hex');
 
     await collection.updateOne(
       { _id: user._id },
-      { $set: { password: hashedPassword }, $unset: { resetToken: "", resetTokenExpires: "" } }
+      { $set: { password: hashedPassword }, $unset: { resetCode: "", resetCodeExpires: "" } }
     );
 
     res.status(200).send('Password has been reset successfully');
@@ -102,7 +101,6 @@ app.post('/reset-password', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
-
 
 
 
