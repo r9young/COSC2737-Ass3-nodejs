@@ -9,6 +9,7 @@ import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
 import conversationRoutes from './conversations.js'; // Ensure this path is correct
 import { sendMail } from './mail.js';
+import crypto from 'crypto';
 
 const port = 4000;
 const app = express();
@@ -26,11 +27,40 @@ app.get('/', (req, res) => {
 // Existing routes
 
 
-// New endpoint for testing email functionality
-app.post('/sendTestEmail', (req, res) => {
-  const { to, subject, text, html } = req.body;
-  sendMail(to, subject, text, html);
-  res.status(200).send('Test email sent');
+// Endpoint for password reset request
+app.post('/password-reset-request', async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const collection = await db.collection('users');
+    const user = await collection.findOne({ email });
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    // Generate a reset token and expiration time
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = Date.now() + 3600000; // Token valid for 1 hour
+
+    // Save the token and expiration in the user's document
+    await collection.updateOne(
+      { _id: user._id },
+      { $set: { resetToken, resetTokenExpires } }
+    );
+
+    const resetLink = `http://13.54.65.192:3000/reset-password?token=${resetToken}`;
+    const subject = 'Password Reset Request';
+    const text = `Hello, you requested a password reset. Please use the following link to reset your password: ${resetLink}`;
+    const html = `<p>Hello,</p><p>You requested a password reset. Please use the following link to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`;
+
+    // Send the email
+    sendMail(email, subject, text, html);
+    res.status(200).send('Password reset email sent');
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('An error occurred');
+  }
 });
 
 
