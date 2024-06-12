@@ -78,13 +78,13 @@ app.post('/password-reset-request', async (req, res) => {
   }
 });
 
-// Endpoint for handling password reset with code
-app.post('/reset-password-with-code', async (req, res) => {
+// Endpoint for handling password reset
+app.post('/reset-password', async (req, res) => {
   const { code, password } = req.body;
 
   try {
     const collection = await db.collection('users');
-    const user = await collection.findOne({ resetCode: code, resetCodeExpires: { $gt: Date.now() } });
+    const user = await collection.findOne({ verificationCode: code, verificationCodeExpires: { $gt: Date.now() } });
 
     if (!user) {
       return res.status(400).send('Invalid or expired code');
@@ -94,7 +94,7 @@ app.post('/reset-password-with-code', async (req, res) => {
 
     await collection.updateOne(
       { _id: user._id },
-      { $set: { password: hashedPassword }, $unset: { resetCode: "", resetCodeExpires: "" } }
+      { $set: { password: hashedPassword }, $unset: { verificationCode: "", verificationCodeExpires: "" } }
     );
 
     res.status(200).send('Password has been reset successfully');
