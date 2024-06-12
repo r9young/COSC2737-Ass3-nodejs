@@ -28,6 +28,7 @@ app.get('/', (req, res) => {
 
 app.use(express.json());
 
+
 // Endpoint for password reset request
 app.post('/password-reset-request', async (req, res) => {
   const { username } = req.body; // Use username instead of email
@@ -63,6 +64,47 @@ app.post('/password-reset-request', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
+
+
+
+// Endpoint for handling password reset
+
+// Endpoint for password reset request
+app.post('/password-reset-request', async (req, res) => {
+  const { username } = req.body; // Use username instead of email
+
+  try {
+    const collection = await db.collection('users');
+    const user = await collection.findOne({ username }); // Query using username
+
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+
+    // Generate a reset token and expiration time
+    const resetToken = crypto.randomBytes(32).toString('hex');
+    const resetTokenExpires = Date.now() + 3600000; // Token valid for 1 hour
+
+    // Save the token and expiration in the user's document
+    await collection.updateOne(
+      { _id: user._id },
+      { $set: { resetToken, resetTokenExpires } }
+    );
+
+    const resetLink = `http://13.54.65.192:3000/reset-password?token=${resetToken}`;
+    const subject = 'Password Reset Request';
+    const text = `Hello, you requested a password reset. Please use the following link to reset your password: ${resetLink}`;
+    const html = `<p>Hello,</p><p>You requested a password reset. Please use the following link to reset your password:</p><p><a href="${resetLink}">Reset Password</a></p>`;
+
+    // Send the email
+    sendMail(user.username, subject, text, html); // Send email to user's email address
+    res.status(200).send('Password reset email sent');
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('An error occurred');
+  }
+});
+
 // Endpoint for handling password reset
 app.post('/reset-password', async (req, res) => {
   const { token, password } = req.body;
@@ -70,9 +112,6 @@ app.post('/reset-password', async (req, res) => {
   try {
     const collection = await db.collection('users');
     const user = await collection.findOne({ resetToken: token, resetTokenExpires: { $gt: Date.now() } });
-
-    // Debug log to check the retrieved user
-    console.log('Retrieved user:', user);
 
     if (!user) {
       return res.status(400).send('Invalid or expired token');
@@ -91,6 +130,12 @@ app.post('/reset-password', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
+
+
+
+
+
+
 //get user
 
 app.post('/addUser', async (req, res) => {
