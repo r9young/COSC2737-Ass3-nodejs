@@ -16,7 +16,6 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: "*" } });
 
-
 app.use(cors());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -27,10 +26,7 @@ app.get('/', (req, res) => {
 
 // Existing routes
 
-
-
 app.use(express.json());
-
 
 // Endpoint for password reset request
 app.post('/password-reset-request', async (req, res) => {
@@ -67,9 +63,6 @@ app.post('/password-reset-request', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
-
-
-
 // Endpoint for handling password reset
 app.post('/reset-password', async (req, res) => {
   const { token, password } = req.body;
@@ -77,6 +70,9 @@ app.post('/reset-password', async (req, res) => {
   try {
     const collection = await db.collection('users');
     const user = await collection.findOne({ resetToken: token, resetTokenExpires: { $gt: Date.now() } });
+
+    // Debug log to check the retrieved user
+    console.log('Retrieved user:', user);
 
     if (!user) {
       return res.status(400).send('Invalid or expired token');
@@ -95,11 +91,6 @@ app.post('/reset-password', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
-
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
-
 //get user
 
 app.post('/addUser', async (req, res) => {

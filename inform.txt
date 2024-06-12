@@ -40,3 +40,11 @@ curl -X POST http://13.54.65.192:4000/sendMessage \
   "senderId": "your_sender_id",
   "text": "your_message_text"
 }'
+
+
+curl -X POST http://13.54.65.192:4000/reset-password \
+-H "Content-Type: application/json" \
+-d '{
+  "token": "a9bbabd967098e85996ff68ba70550ef5dc60abd05f1ed7d6269bf67c164df77",
+  "password": "test"
+}'
