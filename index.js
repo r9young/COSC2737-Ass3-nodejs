@@ -125,10 +125,10 @@ app.post('/addUser', async (req, res) => {
     }
 
     res.status(200).send(result);
-    } catch (error) {
-      console.error('Error:', error);
-      res.status(500).send('An error occurred');
-    }
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('An error occurred');
+  }
 });
 
 app.get('/getUser', async (req, res) => {
