@@ -7,7 +7,7 @@ import db from './mongoC.js';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import { ObjectId } from 'mongodb';
-import conversationRoutes from './conversations.js'; // Ensure this path is correct
+import conversationRoutes from './conversations.js';
 import { sendMail } from './mail.js';
 import crypto from 'crypto';
 import path from 'path'; // Import the path module
@@ -29,21 +29,43 @@ app.use(bodyParser.json());
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'client/build')));
 
-app.get('/password-reset-request', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-});
-
-app.get('/reset-password', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-});
-
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
-});
 // Existing routes
 app.use(express.json());
 
+// Define API routes
+app.post('/addUser', async (req, res) => {
+  try {
+    const collection = await db.collection('users');
+    const newDocument = req.body;
+    newDocument.date = new Date();
+    const result = await collection.insertOne(newDocument);
+    console.log('Request body:', req.body);
 
+    // Check if email exists in the request body
+    if (newDocument.email) {
+      // Send welcome email
+      sendMail(newDocument.email, 'Welcome!', 'Hello and welcome!', '<b>Hello and welcome!</b>');
+    } else {
+      console.error('Email address not provided');
+    }
+
+    res.status(200).send(result);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('An error occurred');
+  }
+});
+
+app.get('/getUser', async (req, res) => {
+  try {
+    const collection = await db.collection('users');
+    const results = await collection.find({}).toArray();
+    res.status(200).send(results);
+  } catch (error) {
+    console.error('Error:', error);
+    res.status(500).send('An error occurred');
+  }
+});
 
 // Endpoint for password reset request
 app.post('/password-reset-request', async (req, res) => {
@@ -106,41 +128,11 @@ app.post('/reset-password', async (req, res) => {
   }
 });
 
-//get user
 
-app.post('/addUser', async (req, res) => {
-  try {
-    const collection = await db.collection('users');
-    const newDocument = req.body;
-    newDocument.date = new Date();
-    const result = await collection.insertOne(newDocument);
-    console.log('Request body:', req.body);
 
-    // Check if email exists in the request body
-    if (newDocument.email) {
-      // Send welcome email
-      sendMail(newDocument.email, 'Welcome!', 'Hello and welcome!', '<b>Hello and welcome!</b>');
-    } else {
-      console.error('Email address not provided');
-    }
 
-    res.status(200).send(result);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('An error occurred');
-  }
-});
 
-app.get('/getUser', async (req, res) => {
-  try {
-    const collection = await db.collection('users');
-    const results = await collection.find({}).toArray();
-    res.status(200).send(results);
-  } catch (error) {
-    console.error('Error:', error);
-    res.status(500).send('An error occurred');
-  }
-});
+
 
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
