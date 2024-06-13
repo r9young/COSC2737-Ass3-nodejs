@@ -12,6 +12,8 @@ import { sendMail } from './mail.js';
 import crypto from 'crypto';
 import path from 'path'; // Import the path module
 import { fileURLToPath } from 'url'; // Import fileURLToPath module
+import bcrypt from 'bcryptjs'; // Use import instead of require
+
 
 const port = 4000;
 const app = express();
@@ -32,11 +34,17 @@ app.use(express.static(path.join(__dirname, 'client/build')));
 // Existing routes
 app.use(express.json());
 
-// Define API routes
+// addUser
+// const bcrypt = require('bcryptjs');
 app.post('/addUser', async (req, res) => {
   try {
     const collection = await db.collection('users');
     const newDocument = req.body;
+
+    // Hash the password
+    const salt = await bcrypt.genSalt(10);
+    newDocument.password = await bcrypt.hash(newDocument.password, salt);
+    
     newDocument.date = new Date();
     const result = await collection.insertOne(newDocument);
     console.log('Request body:', req.body);
@@ -55,6 +63,29 @@ app.post('/addUser', async (req, res) => {
     res.status(500).send('An error occurred');
   }
 });
+
+// app.post('/addUser', async (req, res) => {
+//   try {
+//     const collection = await db.collection('users');
+//     const newDocument = req.body;
+//     newDocument.date = new Date();
+//     const result = await collection.insertOne(newDocument);
+//     console.log('Request body:', req.body);
+
+//     // Check if email exists in the request body
+//     if (newDocument.email) {
+//       // Send welcome email
+//       sendMail(newDocument.email, 'Welcome!', 'Hello and welcome!', '<b>Hello and welcome!</b>');
+//     } else {
+//       console.error('Email address not provided');
+//     }
+
+//     res.status(200).send(result);
+//   } catch (error) {
+//     console.error('Error:', error);
+//     res.status(500).send('An error occurred');
+//   }
+// });
 
 app.get('/getUser', async (req, res) => {
   try {
