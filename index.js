@@ -161,10 +161,6 @@ app.post('/reset-password', async (req, res) => {
 
 
 
-
-
-
-
 app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
 
@@ -172,22 +168,56 @@ app.post('/api/login', async (req, res) => {
     const collection = await db.collection('users');
     const user = await collection.findOne({ username });
 
-    if (user && user.password === password) {
-      const response = {
-        success: true,
-        userId: user._id.toString(),
-        mfaSecret: user.mfaSecret || null
-      };
-      console.log('User MFA status:', user.mfaSecret ? 'Enabled' : 'Disabled', 'MFA Secret:', user.mfaSecret);
-      res.status(200).send(response);
+    if (user) {
+      // Compare the provided password with the hashed password stored in the database
+      const isMatch = await bcrypt.compare(password, user.password);
+
+      if (isMatch) {
+        const response = {
+          success: true,
+          userId: user._id.toString(),
+          mfaSecret: user.mfaSecret || null
+        };
+        console.log('User MFA status:', user.mfaSecret ? 'Enabled' : 'Disabled', 'MFA Secret:', user.mfaSecret);
+        res.status(200).send(response);
+      } else {
+        res.status(401).send({ success: false, message: 'Invalid credentials' });
+      }
     } else {
-      res.status(401).send({ success: false });
+      res.status(401).send({ success: false, message: 'Invalid credentials' });
     }
   } catch (error) {
     console.error('Error during login:', error);
     res.status(500).send('An error occurred');
   }
 });
+
+
+
+
+// app.post('/api/login', async (req, res) => {
+//   const { username, password } = req.body;
+
+//   try {
+//     const collection = await db.collection('users');
+//     const user = await collection.findOne({ username });
+
+//     if (user && user.password === password) {
+//       const response = {
+//         success: true,
+//         userId: user._id.toString(),
+//         mfaSecret: user.mfaSecret || null
+//       };
+//       console.log('User MFA status:', user.mfaSecret ? 'Enabled' : 'Disabled', 'MFA Secret:', user.mfaSecret);
+//       res.status(200).send(response);
+//     } else {
+//       res.status(401).send({ success: false });
+//     }
+//   } catch (error) {
+//     console.error('Error during login:', error);
+//     res.status(500).send('An error occurred');
+//   }
+// });
 
 app.post('/api/verify-otp', async (req, res) => {
   const { otp, userId } = req.body;
